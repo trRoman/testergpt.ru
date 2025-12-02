@@ -1,0 +1,21 @@
+testergpt.ru
+ID 5501297
+
+Сервер:
+89.104.74.98
+Логин: root
+Пароль: 475NeziLc42lCBzQ
+
+\\
+
+reg.ru
+oblachkopuhovoe@yandex.ru
+9yt-uey-aKC-gQH
+
+\\
+
+testergpt.ru/login
+admin@ya.ru
+9yt-uey-aKC-gQH
+
+git@github.com:trRoman/testergpt.ru.git
