@@ -1,36 +1,230 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+ # Онлайн‑тестирование (Next.js + MUI + Tailwind + SQLite/better‑sqlite3)
+ 
+ Интерактивный веб‑сервис для проведения двух типов онлайн‑тестирования с записью результатов в локальную базу данных (SQLite), админ‑панелью и выгрузкой результатов в CSV/Excel.
+ 
+ ## Технологии
+ 
+ - **Next.js 16 (App Router)** — SSR/SSG + API Routes  
+ - **React 18**  
+ - **MUI v5/7** (Material UI) — UI‑компоненты, темы, модальные окна  
+ - **Tailwind CSS v4** — утилитарные стили для раскладки/цветов  
+ - **better‑sqlite3** — быстрый синхронный доступ к локальной БД SQLite (без Prisma)  
+ 
+ Минимальная версия Node.js: **v18+** (рекомендуется LTS 18/20). На Windows для сборки `better-sqlite3` может потребоваться установленный **Microsoft C++ Build Tools**.
+ 
+ ## Структура
+ 
+ ```
+ src/
+   app/
+     api/
+       participant/route.ts                 — выдача participantId (UUID/рандом)
+       test1/route.ts                       — приём результатов Теста 1 (SQLite)
+       test2/route.ts                       — приём результатов Теста 2 (SQLite)
+       admin/
+         export/
+           test1/route.ts                   — экспорт Тест 1 в CSV
+           test1/xls/route.ts               — экспорт Тест 1 в Excel (.xls)
+           test2/route.ts                   — экспорт Тест 2 в CSV
+           test2/xls/route.ts               — экспорт Тест 2 в Excel (.xls)
+     test1/page.tsx                         — UI «Тестирование 1»
+     test2/page.tsx                         — UI «Тестирование 2» (оценка доверия)
+     admin/page.tsx                         — админ‑панель: таблицы + ссылки на выгрузку
+     finished/page.tsx                      — финальный экран после прохождения обоих блоков
+     login/                                 — страница входа в админку
+   components/
+     ThemeRegistry.tsx                      — SSR‑интеграция MUI (Emotion)
+     ThemeProviderClient.tsx                — ThemeProvider + CssBaseline
+     SiteHeader.tsx / SiteFooter.tsx        — шапка/футер, ссылка «скачать CSV/Excel» в админке
+   lib/
+     sqlite.ts                              — инициализация better‑sqlite3 и создание таблиц
+     auth.ts                                — простая аутентификация (JWT через Next API)
+ prisma/
+   dev.db                                   — локальная база данных SQLite
+ ```
+ 
+ ## Запуск
+ 
+ 1) Установите зависимости:
+ 
+ ```bash
+ npm install
+ ```
+ 
+ 2) (Опционально) Проверьте переменные окружения:
+ 
+ `.env` (используется для БД, может отсутствовать):
+ 
+ ```
+ # По умолчанию БД лежит в prisma/dev.db, переменная не обязательна
+ # DATABASE_URL="file:./prisma/dev.db"
+ 
+ # Для админ‑логина можно переопределить значения:
+ # DATABASE_URL=...
+ # ADMIN_EMAIL="admin@example.com"
+ # ADMIN_PASSWORD="supersecret"
+ # DATABASE_URL также можно не задавать — БД будет по пути prisma/dev.db
+ ```
+ 
+ 3) Запуск в разработке:
+ 
+ ```bash
+ npm run dev
+ # по умолчанию: http://localhost:3000
+ ```
+ 
+ 4) Продакшн‑сборка:
+ 
+ ```bash
+ npm run build
+ npm start
+ ```
+ 
+ > Примечание для Windows: если установка `better-sqlite3` завершилась ошибкой сборки, установите [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/ru/visual-cpp-build-tools/), либо используйте предсобранные бинарные сборки Node LTS.
+ 
+ ## Пользовательский сценарий
+ 
+ ### Приветствие и старт
+ 
+ - Главная страница (`/`) показывает приветствие и кнопку **«Начать»**.  
+ - При первом входе создаётся уникальный `participantId` (через `POST /api/participant`) и сохраняется в **localStorage**.  
+ - После завершения обоих блоков в `localStorage` ставится флаг `finishedAll = "1"`. При повторном визите на `/` пользователь автоматически перенаправляется на страницу `/finished`.
+ 
+ ### Тестирование 1 — «Краткие вербальные задачи»
+ 
+ Адрес: `/test1`  
+ Логика:
+ 
+ - Ровно **10 задач**; пользователь **вводит короткий ответ** в текстовое поле для каждой.  
+ - Перед началом запускается таймер. Время чтения (`readingTimeMs`) — это разница между стартом вопроса и нажатием «Далее».  
+ - На стороне сервера (в `POST /api/test1`) запись результата в таблицу `Test1Result` (см. схему ниже).  
+ - Для каждого вопроса реализована **логика проверки ответа** (регистронезависимая, с множеством «паттернов» корректных формулировок). На основании результата вычисляется:  
+   - `answerScore = 1`, если ответ совпал с одним из допустимых паттернов; иначе `0`;  
+   - `totalScore` — кумулятивная сумма `answerScore` за все уже пройденные вопросы.
+ 
+ Примеры логики (сокращённо):  
+ - В1: «Как зовут пятую дочь?» → ответы вида «Мэри/мери».  
+ - В2: «Обгоняете второго — на каком месте?» → «2», «2‑е», «на втором», «второе» и т.п.  
+ - В3: «Где хоронят выживших?» → «нигде», «выживших не хоронят», «ни в какой стране».  
+ - В4: «Кто первым получит банан на кокосовой пальме?» → «никто / бананов нет / на кокосовой пальме бананы не растут».  
+ - В5: «Какого цвета лестницы в одноэтажном доме?» → «никакого / лестниц нет / без лестниц».  
+ - В6: «Сколько животных каждого вида поместил Моисей?» → «нисколько / ноль / 0 / это делал Ной / Моисей не помещал».  
+ - В7: «Куда летит дым у электропоезда?» → «никуда / ни в какую / дыма нет / не дымит».  
+ - В8: «Что зажжёте первым?» → «спичку / зажечь спичку» и т.п.  
+ - В9: «Мужчина женится на сестре своей вдовы?» → «невозможно / нельзя / он уже умер / некорректный вопрос».  
+ - В10: «Какое предложение верно про белый желток?» → «ни одно / оба неверны / желток жёлтый / не белый».
+ 
+ Таблица `Test1Result`:
+ 
+ | Поле               | Тип     | Описание                                      |
+ |--------------------|---------|-----------------------------------------------|
+ | participantId      | TEXT    | Идентификатор участника (из localStorage/API) |
+ | questionNumber     | INTEGER | Номер задачи (1..10)                          |
+ | answerInput        | TEXT    | Введённый ответ                               |
+ | readingTimeMs      | INTEGER | Время чтения/ввода, мс                        |
+ | answerScore        | REAL    | 0 или 1                                       |
+ | totalScore         | REAL    | накопленная сумма баллов                      |
+ | createdAt          | DATETIME| ISO‑timestamp записи                          |
+ 
+ ### Тестирование 2 — «Оценка доверия тексту»
+ 
+ Адрес: `/test2`  
+ Логика:
+ 
+ - Всего **4 задания** (вопроса).  
+ - Для каждого «базового вопроса» есть **две версии текста**: нейтральный и уверенный тон.  
+ - При старте формируется сессия: **ровно 2** задания получают тон **NEUTRAL**, **2** — **CONFIDENT**.  
+ - Порядок задач **перемешивается**; для каждого пользователя — свой порядок и распределение тонов (в пределах правила 2/2).  
+ - Пользователь читает текст, выбирает **балл доверия (1..10)** и жмёт «Дальше».  
+ - Дополнительно доступна кнопка **«Проверить источники»** — первое модальное окно с описаниями и ссылками; при клике на ссылку открывается **второе модальное окно** (уменьшенное, `70vh`, с iframe‑превью).  
+ 
+ Каждый переход «Дальше» отправляет `POST /api/test2` с записью в таблицу `Test2Result`:
+ 
+ - `participantId` — из localStorage;  
+ - `tone` — `NEUTRAL` или `CONFIDENT`;  
+ - `plotTopic` — тема сюжета (`SLEZHKA`, `MENZURA`, `PELMENI`, `DISTANCE` и т.п.);  
+ - `taskNumber` — ID базового вопроса (1..4);  
+ - `sequenceNumber` — позиция в текущей сессии (1..4);  
+ - `readingTimeMs` — время чтения до выставления оценки;  
+ - `trustScore` — выставленный балл (1..10);  
+ - `sourceButtonClicked` — нажимал ли пользователь кнопку «Проверить источники»;  
+ - `timeInSourceModalMs` — суммарное время, проведённое в модалке источников;  
+ - `timeInSourceModalGt5Sec` — флаг (true/false), было ли в модалке ≥ 5 секунд;  
+ - `linkClicked` — кликал ли пользователь по внешним ссылкам.
+ 
+ Таблица `Test2Result`:
+ 
+ | Поле                      | Тип     | Описание                                             |
+ |---------------------------|---------|------------------------------------------------------|
+ | participantId             | TEXT    | ID участника                                         |
+ | tone                      | TEXT    | NEUTRAL / CONFIDENT                                  |
+ | plotTopic                 | TEXT    | Тематика текста (PELMENI/SLEZHKA/MENZURA/DISTANCE)   |
+ | taskNumber                | INTEGER | Номер базового текста (1..4)                         |
+ | sequenceNumber            | INTEGER | Порядок показа в сессии (1..4)                       |
+ | readingTimeMs             | INTEGER | Время чтения до оценки, мс                           |
+ | trustScore                | INTEGER | Оценка доверия 1..10                                 |
+ | sourceButtonClicked       | INTEGER | 0/1                                                  |
+ | timeInSourceModalMs       | INTEGER | Сумм. время в модалке источников, мс                 |
+ | timeInSourceModalGt5Sec   | INTEGER | 0/1, был ли порог 5 секунд                           |
+ | linkClicked               | INTEGER | 0/1, был ли клик по внешней ссылке                   |
+ | createdAt                 | DATETIME| ISO‑timestamp записи                                 |
+ 
+ > Примечание по источникам: из‑за CORS / `X-Frame-Options` некоторые домены запрещают встраивание. В таком случае ссылка открывается во втором модальном окне в `iframe`; если ресурс запрещает встраивание, браузер может показать заглушку. Это ожидаемо. При необходимости можно заменить на открытие новой вкладки или настроить собственный прокси.
+ 
+ ### Админ‑панель и экспорт
+ 
+ Адрес: `/admin` (доступ по логину).  
+ 
+ - Авторизация: `POST /api/admin` не используется; используется `/api/participant` и **простой JWT вход**:
+   - Страница входа: `/login`  
+   - По умолчанию: `admin@example.com` / `supersecret` (или см. `.env`/`src/lib/auth.ts`)  
+   - После входа выдаётся токен, хранящийся в **HTTP‑only** cookie, проверки выполняются на серверных маршрутах.
+ - В админке доступны две таблицы с результатами и ссылки **(скачать Excel)**:
+   - `/api/admin/export/test1/xls` — экспорт результатов Теста 1 в `.xls`  
+   - `/api/admin/export/test2/xls` — экспорт результатов Теста 2 в `.xls`  
+ - В самих таблицах времена показа/чтения уже приведены к **секундам**, `participantId` для удобства в UI отображается укороченным (последние символы), однако при **выгрузке** в файл сохраняется **полный** идентификатор.
+ 
+ ## Безопасность и ограничения
+ 
+ - **Аутентификация в админку упрощённая** (JWT в cookie, без ролей/регистрации, без восстановления пароля). Для продакшн‑развёртывания добавьте:
+   - Секрет `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AUTH_SECRET` в `.env`;  
+   - HTTPS, корректные заголовки безопасности;  
+   - Ограничение доступа по IP/базовой авторизации на уровень выше (reverse‑proxy) при необходимости.
+ - **База данных локальная (SQLite)** — подходит для одиночного узла/прототипа. Для массивных нагрузок или горизонтального масштабирования используйте PostgreSQL/MySQL и соответствующий драйвер/ORM.
+ - **Внешние источники в модалке**: некоторые URL не отобразятся в `<iframe>` из‑за политики сайтов (CSP/XFO). В этом случае рекомендуется открыть ссылку в новой вкладке или использовать внутренний прокси‑рендеринг.
+ 
+ ## Тонкости реализации
+ 
+ - `participantId` создаётся **один раз** и хранится в `localStorage` — это связывает записи Теста 1 и Теста 2.  
+ - Для теста 1 в клиентской части заранее закодированы паттерны корректных ответов, в т.ч. с учётом **регистронезависимости**, вариантов «2/2‑е/второе/на втором», «нигде/ни в какой» и т.д.  
+ - Суммарный балл `totalScore` копится на клиенте и отправляется вместе с каждым ответом — это фиксирует динамику набора очков.  
+ - Тест 2 формирует массив из 4 заданий при старте (2 NEUTRAL + 2 CONFIDENT) и **перетасовывает** порядок показа; каждое задание сопровождается источниками (внутреннее модальное окно, открытие внешних ссылок — во второй модалке с iframe).  
+ - После завершения Теста 2 ставится флаг `finishedAll = "1"`; на главной странице включён автопереход на `/finished` при наличии флага.
+ 
+ ## Скрипты
+ 
+ - `npm run dev` — запуск в режиме разработки  
+ - `npm run build` — сборка (Next.js + TypeScript)  
+ - `npm start` — продакшн‑сервер  
+ - `npm run lint` — линтер (ESLint)
+ 
+ ## Изменение содержимого Теста 2 (тексты и источники)
+ 
+ В файле `src/app/test2/page.tsx` описаны базовые вопросы и тексты для тонов:
+ 
+ ```ts
+ const BASE_QUESTIONS: BaseQuestion[] = [
+   { id: 1, plotTopic: "SLEZHKA", neutralText: "...", confidentText: "...", neutralVerify: "...", confidentVerify: "..." },
+   { id: 2, plotTopic: "MENZURA", ... },
+   { id: 3, plotTopic: "PELMENI", ... },
+   { id: 4, plotTopic: "DISTANCE", ... },
+ ];
+ ```
+ 
+ А содержимое модалки с источниками формируется в функции `renderVerifyContent()` по `current.id`. Можно добавлять/менять описания и ссылки под каждый вопрос.
+ 
+ ## Лицензия
 
-## Getting Started
+ Авторская лицензия: использование, копирование, изменение и развёртывание кода разрешаются с разрешения автора. Для получения разрешения, а также по вопросам доработки и внедрения — обращайтесь к автору (trRoman).
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+ 
