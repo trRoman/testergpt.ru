@@ -33,6 +33,20 @@ rm dev.db
 
 \\\\
 
+<!-- Проверка статуса nginx: -->
+sudo systemctl status nginx --no-pager -l
+<!-- Просмотр журнала nginx: -->
+sudo journalctl -xeu nginx.service --no-pager | tail -n 50
+
+<!-- Выпуск сертификата Let's Encrypt: -->
+sudo certbot --nginx -d testergpt.ru -d www.testergpt.ru -m you@example.com --agree-tos --no-eff-email
+
+<!-- Проверка работы приложения: -->
+curl -I http://127.0.0.1:3000
+<!-- Проверка работы приложения через HTTPS: -->
+curl -I https://testergpt.ru
+\\\\
+
 На сервере ubuntu нужн загрузить этот проект из git@github.com:trRoman/testergpt.ru.git 
 Развернуть этот проект в директории testergpt.
 Настроить домен работу на домене testergpt.ru

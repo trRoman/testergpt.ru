@@ -18,6 +18,20 @@ export async function POST(req: NextRequest) {
 		if (!okEmail || !okPass) {
 			return NextResponse.json({ error: "Неверный логин или пароль" }, { status: 401 });
 		}
+
+		// Вычисляем флаг secure для cookie: если за прокси и приходит https — включаем,
+		// иначе (на голом http) выключаем, чтобы браузер принял cookie.
+		const forwardedProto = req.headers.get("x-forwarded-proto");
+		const envSecure = (process.env.COOKIE_SECURE ?? "").toLowerCase();
+		const secure =
+			envSecure === "true"
+				? true
+				: envSecure === "false"
+				? false
+				: forwardedProto
+				? forwardedProto.split(",")[0].trim() === "https"
+				: false;
+
 		const now = Math.floor(Date.now() / 1000);
 		const exp = now + 60 * 60 * 24 * 7; // 7 days
 		const token = signToken({ sub: email, iat: now, exp });
@@ -25,7 +39,7 @@ export async function POST(req: NextRequest) {
 		res.cookies.set("session", token, {
 			httpOnly: true,
 			sameSite: "lax",
-			secure: process.env.NODE_ENV === "production",
+			secure,
 			path: "/",
 			maxAge: 60 * 60 * 24 * 7,
 		});
