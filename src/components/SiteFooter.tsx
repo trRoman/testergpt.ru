@@ -5,7 +5,7 @@ import { Container, Stack, Typography } from "@mui/material";
 export default function SiteFooter() {
 	const year = new Date().getFullYear();
 	return (
-		<footer>
+		<footer style={{ backgroundColor: "#1D2630" }}>
 			<Container maxWidth="lg" sx={{ py: 2 }}>
 				<Stack
 					direction={{ xs: "column", sm: "row" }}

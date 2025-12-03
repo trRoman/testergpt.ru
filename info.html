@@ -21,6 +21,10 @@ admin@ya.ru
 git@github.com:trRoman/testergpt.ru.git
 
 cd /var/www/testergpt
+
+git fetch origin --prune
+git reset --hard origin/main
+
 npm install
 npm run build
 npm run start

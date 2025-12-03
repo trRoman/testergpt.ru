@@ -405,7 +405,7 @@ export default function Test1Page() {
 
 	return (
 		<div className="flex min-h-screen items-center justify-center font-sans">
-			<Container maxWidth="md" className="bg-white dark:bg-black rounded-xl p-10">
+			<Container maxWidth="md" className="rounded-xl p-10">
 				{!started && (
 					<Typography variant="h4" component="h1" fontWeight={600}>
 						Тестирование 1

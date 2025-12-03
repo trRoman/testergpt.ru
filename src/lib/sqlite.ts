@@ -39,6 +39,16 @@ CREATE TABLE IF NOT EXISTS "Test2Result" (
   "linkClicked" INTEGER NOT NULL DEFAULT 0,
   "createdAt" DATETIME NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS "Survey" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "participantId" TEXT NOT NULL,
+  "age" INTEGER NOT NULL,
+  "gender" TEXT NOT NULL,
+  "education" TEXT NOT NULL,
+  "llmUsage" TEXT NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT (datetime('now'))
+);
 `);
 
 export default db;

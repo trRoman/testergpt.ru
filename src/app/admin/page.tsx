@@ -5,8 +5,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyToken } from "@/lib/auth";
 import db from "@/lib/sqlite";
+import AdminDeleteButton from "@/components/AdminDeleteButton";
 
 type Test1Row = {
+  id: number;
   participantId: string;
   questionNumber: number;
   answerInput: string;
@@ -17,6 +19,7 @@ type Test1Row = {
 };
 
 type Test2Row = {
+  id: number;
   participantId: string;
   tone: string;
   plotTopic: string;
@@ -28,6 +31,16 @@ type Test2Row = {
   timeInSourceModalMs: number;
   timeInSourceModalGt5Sec: number;
   linkClicked: number;
+  createdAt: string;
+};
+
+type SurveyRow = {
+  id: number;
+  participantId: string;
+  age: number;
+  gender: string;
+  education: string;
+  llmUsage: string;
   createdAt: string;
 };
 
@@ -47,17 +60,63 @@ export default async function AdminPage() {
   };
 
   const test1Rows = db
-    .prepare(`SELECT participantId, questionNumber, answerInput, readingTimeMs, answerScore, totalScore, createdAt FROM "Test1Result" ORDER BY createdAt DESC`)
+    .prepare(`SELECT id, participantId, questionNumber, answerInput, readingTimeMs, answerScore, totalScore, createdAt FROM "Test1Result" ORDER BY createdAt DESC`)
     .all() as unknown as Test1Row[];
 
   const test2Rows = db
-    .prepare(`SELECT participantId, tone, plotTopic, taskNumber, sequenceNumber, readingTimeMs, trustScore, sourceButtonClicked, timeInSourceModalMs, timeInSourceModalGt5Sec, linkClicked, createdAt FROM "Test2Result" ORDER BY createdAt DESC`)
+    .prepare(`SELECT id, participantId, tone, plotTopic, taskNumber, sequenceNumber, readingTimeMs, trustScore, sourceButtonClicked, timeInSourceModalMs, timeInSourceModalGt5Sec, linkClicked, createdAt FROM "Test2Result" ORDER BY createdAt DESC`)
     .all() as unknown as Test2Row[];
+
+  const surveyRows = db
+    .prepare(`SELECT id, participantId, age, gender, education, llmUsage, createdAt FROM "Survey" ORDER BY createdAt DESC`)
+    .all() as unknown as SurveyRow[];
 
   return (
     <div className="flex min-h-screen items-start justify-center font-sans">
       <div className="w-full max-w-7xl px-4 py-8">
         <h1 className="text-2xl font-semibold mb-6 text-white">Админ-панель: результаты тестирования</h1>
+
+        <section className="mb-12">
+          <h2 className="text-xl font-semibold mb-3 text-white">
+            Анкета{" "}
+            <a
+              href="/api/admin/export/survey/xls"
+              className="text-blue-300 underline text-sm ml-2"
+            >
+              (скачать Excel)
+            </a>
+          </h2>
+          <div className="overflow-auto rounded-xl border border-white/10">
+            <table className="min-w-full text-sm text-white">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-3 py-2 text-left">ID участника</th>
+                  <th className="px-3 py-2 text-left">Возраст</th>
+                  <th className="px-3 py-2 text-left">Пол</th>
+                  <th className="px-3 py-2 text-left">Образование</th>
+                  <th className="px-3 py-2 text-left">Опыт LLM</th>
+                  <th className="px-3 py-2 text-left">Дата</th>
+                  <th className="px-3 py-2 text-left"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {surveyRows.map((r, idx) => (
+                  <tr key={idx} className="odd:bg-white/0 even:bg-white/5">
+                    <td className="px-3 py-2">{shortId(r.participantId)}</td>
+                    <td className="px-3 py-2">{r.age}</td>
+                    <td className="px-3 py-2">{r.gender}</td>
+                    <td className="px-3 py-2">{r.education}</td>
+                    <td className="px-3 py-2">{r.llmUsage}</td>
+                    <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      <AdminDeleteButton endpoint="/api/admin/delete/survey" id={r.id} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <section className="mb-12">
           <h2 className="text-xl font-semibold mb-3 text-white">
@@ -80,6 +139,7 @@ export default async function AdminPage() {
                   <th className="px-3 py-2 text-left">Балл ответа</th>
                   <th className="px-3 py-2 text-left">Сумма баллов</th>
                   <th className="px-3 py-2 text-left">Дата</th>
+                  <th className="px-3 py-2 text-left"></th>
                 </tr>
               </thead>
               <tbody>
@@ -92,6 +152,9 @@ export default async function AdminPage() {
                     <td className="px-3 py-2">{r.answerScore}</td>
                     <td className="px-3 py-2">{r.totalScore}</td>
                     <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      <AdminDeleteButton endpoint="/api/admin/delete/test1" id={r.id} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -125,6 +188,7 @@ export default async function AdminPage() {
                   <th className="px-3 py-2 text-left">В модалке {'>'} 5 с</th>
                   <th className="px-3 py-2 text-left">Клик ссылки</th>
                   <th className="px-3 py-2 text-left">Дата</th>
+                  <th className="px-3 py-2 text-left"></th>
                 </tr>
               </thead>
               <tbody>
@@ -142,6 +206,9 @@ export default async function AdminPage() {
                     <td className="px-3 py-2">{r.timeInSourceModalGt5Sec ? "Да" : "Нет"}</td>
                     <td className="px-3 py-2">{r.linkClicked ? "Да" : "Нет"}</td>
                     <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      <AdminDeleteButton endpoint="/api/admin/delete/test2" id={r.id} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

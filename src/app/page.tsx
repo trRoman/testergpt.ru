@@ -68,7 +68,7 @@ export default function Home() {
 							Если вы согласны принять участие в исследовании, пожалуйста, нажмите кнопку «Начать».
 						</Typography>
 					</Stack>
-					<Link href="/test1">
+					<Link href="/survey">
 						<Button variant="contained" color="primary" size="large">
 							Начать
 						</Button>

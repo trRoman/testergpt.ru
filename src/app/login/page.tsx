@@ -35,7 +35,7 @@ export default function LoginPage() {
 
 	return (
 		<div className="flex min-h-screen items-center justify-center font-sans">
-			<Container maxWidth="sm" className="bg-white dark:bg-black rounded-xl p-10">
+			<Container maxWidth="sm" className="bg-[#1D2630] rounded-xl p-10">
 				<Stack spacing={2} alignItems="stretch" textAlign="center">
 					<Typography variant="h4" component="h1" fontWeight={600} sx={{ color: "common.white" }}>
 						Вход
@@ -52,6 +52,11 @@ export default function LoginPage() {
 								variant="outlined"
 								InputLabelProps={{ sx: { color: "#9e9e9e" } }}
 								InputProps={{ sx: { color: "common.white" } }}
+								sx={{
+									"& .MuiOutlinedInput-notchedOutline": { borderColor: "#9e9e9e" },
+									"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#9e9e9e" },
+									"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#9e9e9e" },
+								}}
 							/>
 							<TextField
 								label="Пароль"
@@ -62,6 +67,11 @@ export default function LoginPage() {
 								variant="outlined"
 								InputLabelProps={{ sx: { color: "#9e9e9e" } }}
 								InputProps={{ sx: { color: "common.white" } }}
+								sx={{
+									"& .MuiOutlinedInput-notchedOutline": { borderColor: "#9e9e9e" },
+									"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#9e9e9e" },
+									"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#9e9e9e" },
+								}}
 							/>
 							<Button type="submit" variant="contained" disabled={loading}>
 								{loading ? "Вход..." : "Войти"}
