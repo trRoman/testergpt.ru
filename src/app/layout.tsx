@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
 	title: "Онлайн тестирование",
-	description: "Проект онлайн тестирования (Next.js + MUI + Tailwind + SQLite)",
+	description: "Проект онлайн тестирования",
 };
 
 export default function RootLayout({
