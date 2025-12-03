@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function FinishedPage() {
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+		<div className="flex min-h-screen items-center justify-center font-sans">
 			<Container maxWidth="md" className="bg-white dark:bg-black rounded-xl p-10">
 				<Stack spacing={3} alignItems="center" textAlign="center">
 					<Typography variant="h4" component="h1" fontWeight={700} sx={{ color: "common.white" }}>

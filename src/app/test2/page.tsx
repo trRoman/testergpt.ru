@@ -159,6 +159,11 @@ export default function Test2Page() {
 		[questions, currentIndex],
 	);
 
+	const sliderMarks = useMemo(
+		() => Array.from({ length: 11 }, (_, i) => ({ value: i, label: String(i) })),
+		[],
+	);
+
 	function handleStart() {
 		setQuestions(buildSessionQuestions());
 		setStarted(true);
@@ -472,11 +477,13 @@ export default function Test2Page() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+		<div className="flex min-h-screen items-center justify-center font-sans">
 			<Container maxWidth="md" className="bg-white dark:bg-black rounded-xl p-10">
-				<Typography variant="h4" component="h1" fontWeight={600}>
-					Тестирование 2
-				</Typography>
+				{!started && (
+					<Typography variant="h4" component="h1" fontWeight={600}>
+						Тестирование 2
+					</Typography>
+				)}
 				<Stack
 					spacing={3}
 					maxWidth="lg"
@@ -528,21 +535,37 @@ export default function Test2Page() {
 							</Typography>
 							<Stack spacing={1}>
 								<Typography sx={{ color: "common.white" }}>
-									Выберите балл доверия (1 — минимально, 10 — максимально):
+									Выберите балл доверия (0 — минимально, 10 — максимально):
 								</Typography>
 								<Slider
-									min={1}
+									min={0}
 									max={10}
 									step={1}
-									marks
+									marks={sliderMarks}
 									value={trust ?? 0}
 									onChange={(_, v) => setTrust(Array.isArray(v) ? v[0] : (v as number))}
 									valueLabelDisplay="auto"
+									sx={{
+										"& .MuiSlider-markLabel": { color: "common.white" },
+										"& .MuiSlider-valueLabelLabel": { color: "common.white" },
+									}}
 								/>
 							</Stack>
 							{trust !== null && (
 								<Stack direction="row" spacing={2}>
-									<Button variant="outlined" onClick={openVerify}>
+									<Button
+										variant="contained"
+										onClick={openVerify}
+										sx={{
+											bgcolor: "#0E805C",
+											color: "common.white",
+											"&:hover": { bgcolor: "#0C6E50" },
+											"&.Mui-disabled": {
+												backgroundColor: "#0E805C",
+												color: "#ffffff",
+											},
+										}}
+									>
 										Проверить источники
 									</Button>
 								</Stack>

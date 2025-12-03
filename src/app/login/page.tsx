@@ -34,7 +34,7 @@ export default function LoginPage() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+		<div className="flex min-h-screen items-center justify-center font-sans">
 			<Container maxWidth="sm" className="bg-white dark:bg-black rounded-xl p-10">
 				<Stack spacing={2} alignItems="stretch" textAlign="center">
 					<Typography variant="h4" component="h1" fontWeight={600} sx={{ color: "common.white" }}>

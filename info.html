@@ -21,6 +21,23 @@ admin@ya.ru
 git@github.com:trRoman/testergpt.ru.git
 
 cd /var/www/testergpt
+npm install
+npm run build
+npm run start
+sudo nginx -t
+sudo systemctl reload nginx
+sudo systemctl restart testergpt
+
+<!-- Перезагрузка сервиса testergpt: -->
+sudo systemctl daemon-reload
+<!-- Включение сервиса testergpt: -->
+sudo systemctl enable testergpt
+<!-- Запуск сервиса testergpt: -->
+sudo systemctl start testergpt
+
+<!-- Проверка работы сервиса testergpt: -->
+sudo systemctl status testergpt --no-pager -l
+
 
 Укажите Git использовать вашу локальную версию:
 git checkout --ours dev.db
@@ -45,119 +62,5 @@ sudo certbot --nginx -d testergpt.ru -d www.testergpt.ru -m you@example.com --ag
 curl -I http://127.0.0.1:3000
 <!-- Проверка работы приложения через HTTPS: -->
 curl -I https://testergpt.ru
+
 \\\\
-
-На сервере ubuntu нужн загрузить этот проект из git@github.com:trRoman/testergpt.ru.git 
-Развернуть этот проект в директории testergpt.
-Настроить домен работу на домене testergpt.ru
-
-Пошаговая инструкция (Ubuntu 22.04+)
-
-1) Обновить систему и установить зависимости
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl git ufw nginx build-essential
-```
-
-2) Установить Node.js LTS через nvm (рекомендуется)
-```bash
-curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
-nvm install --lts
-node -v && npm -v
-```
-
-3) Открыть firewall (если UFW включён)
-```bash
-sudo ufw allow OpenSSH
-sudo ufw allow 80,443/tcp
-sudo ufw enable
-```
-
-4) Создать директорию и клонировать проект в /var/www/testergpt
-- Сначала создайте целевую папку и перейдите в неё:
-```bash
-sudo mkdir -p /var/www/testergpt
-sudo chown -R $USER:$USER /var/www/testergpt
-cd /var/www/testergpt/testergpt.ru
-```
-- Вариант A (SSH, если серверный ключ добавлен в GitHub):
-```bash
-ssh-keygen -t ed25519 -C "server-testergpt" -f ~/.ssh/testergpt-ru -N ""
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/testergpt-ru
-cat ~/.ssh/testergpt-ru.pub   # добавить этот ключ в GitHub -> Settings -> SSH and GPG keys
-git clone git@github.com:trRoman/testergpt.ru.git .
-```
-- Вариант B (HTTPS, если репозиторий публичный):
-```bash
-git clone https://github.com/trRoman/testergpt.ru.git .
-```
-
-5) Настроить переменные окружения и права на БД
-```bash
-cd /var/www/testergpt
-printf "AUTH_EMAIL=admin@ya.ru\nAUTH_PASSWORD=9yt-uey-aKC-gQH\nAUTH_SECRET=$(openssl rand -hex 32)\n" | tee -a .env
-sudo chown -R $USER:$USER prisma
-```
-Примечание: используется локальная SQLite (`prisma/dev.db`). Отдельный сервер БД не нужен.
-
-6) Установить зависимости и собрать приложение
-```bash
-npm install
-npm run build
-```
-
-7) Запустить как сервис через PM2
-```bash
-sudo npm i -g pm2
-pm2 start npm --name testergpt -- start
-pm2 save
-pm2 startup systemd -u $USER --hp $HOME
-```
-
-8) Настроить Nginx (reverse-proxy на 3000)
-```bash
-sudo tee /etc/nginx/sites-available/testergpt.ru >/dev/null <<'NGINX'
-server {
-    listen 80;
-    listen [::]:80;
-    server_name testergpt.ru www.testergpt.ru;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-NGINX
-sudo ln -s /etc/nginx/sites-available/testergpt.ru /etc/nginx/sites-enabled/ || true
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-9) Выпустить SSL‑сертификат Let’s Encrypt
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d testergpt.ru -d www.testergpt.ru --redirect -m you@example.com --agree-tos -n
-sudo systemctl reload nginx
-```
-
-10) Проверка
-```bash
-curl -I https://testergpt.ru
-# затем откройте https://testergpt.ru/login и войдите данными из .env
-```
-
-11) Обновления релиза
-```bash
-cd /var/www/testergpt
-git pull
-npm ci
-npm run build
-pm2 restart testergpt
-```

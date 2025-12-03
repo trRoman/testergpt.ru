@@ -15,8 +15,8 @@ import {
 
 export default function Home() {
   return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-			<Container maxWidth="md" className="bg-white dark:bg-black rounded-xl p-10">
+		<div className="flex min-h-screen items-center justify-center font-sans">
+			<Container maxWidth="md" className="rounded-xl p-10">
 				<RedirectIfFinished />
 				<Stack spacing={4} alignItems="center" textAlign="center">
 					<Typography variant="h3" component="h1" fontWeight={600}>

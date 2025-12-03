@@ -55,7 +55,7 @@ export default async function AdminPage() {
     .all() as unknown as Test2Row[];
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex min-h-screen items-start justify-center font-sans">
       <div className="w-full max-w-7xl px-4 py-8">
         <h1 className="text-2xl font-semibold mb-6 text-white">Админ-панель: результаты тестирования</h1>
 

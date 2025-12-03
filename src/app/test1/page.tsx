@@ -404,11 +404,13 @@ export default function Test1Page() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+		<div className="flex min-h-screen items-center justify-center font-sans">
 			<Container maxWidth="md" className="bg-white dark:bg-black rounded-xl p-10">
-				<Typography variant="h4" component="h1" fontWeight={600}>
-					Тестирование 1
-				</Typography>
+				{!started && (
+					<Typography variant="h4" component="h1" fontWeight={600}>
+						Тестирование 1
+					</Typography>
+				)}
 				<Stack spacing={3} 
 					maxWidth="lg"
 					sx={{
