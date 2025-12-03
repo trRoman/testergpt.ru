@@ -7,6 +7,28 @@ const esc = (s: unknown) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+const msToHms = (ms: number) => {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n < 0) return "00:00:00";
+  const totalSec = Math.floor(n / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (v: number) => String(v).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+};
+
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
 export async function GET() {
   try {
     const rows = db
@@ -36,10 +58,10 @@ export async function GET() {
       "Тема сюжета",
       "№ задания",
       "№ последовательности",
-      "Время чтения (сек)",
+      "Время чтения (ч:м:с)",
       "Балл доверия",
       "Кнопка источника",
-      "Время в модалке (сек)",
+      "Время в модалке (ч:м:с)",
       "В модалке > 5 с",
       "Клик ссылки",
       "Дата",
@@ -47,21 +69,21 @@ export async function GET() {
 
     const rowsHtml = rows
       .map((r) => {
-        const readSec = (Number(r.readingTimeMs) / 1000).toFixed(2);
-        const modalSec = (Number(r.timeInSourceModalMs) / 1000).toFixed(2);
+        const readHms = msToHms(r.readingTimeMs);
+        const modalHms = msToHms(r.timeInSourceModalMs);
         return `<tr>
   <td>${esc(r.participantId)}</td>
   <td>${esc(r.tone)}</td>
   <td>${esc(r.plotTopic)}</td>
   <td>${esc(r.taskNumber)}</td>
   <td>${esc(r.sequenceNumber)}</td>
-  <td>${esc(readSec)}</td>
+  <td>${esc(readHms)}</td>
   <td>${esc(r.trustScore)}</td>
   <td>${esc(r.sourceButtonClicked ? "Да" : "Нет")}</td>
-  <td>${esc(modalSec)}</td>
+  <td>${esc(modalHms)}</td>
   <td>${esc(r.timeInSourceModalGt5Sec ? "Да" : "Нет")}</td>
   <td>${esc(r.linkClicked ? "Да" : "Нет")}</td>
-  <td>${esc(new Date(r.createdAt).toISOString())}</td>
+  <td>${esc(fmtDate(r.createdAt))}</td>
 </tr>`;
       })
       .join("\n");

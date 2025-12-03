@@ -7,6 +7,28 @@ const esc = (s: unknown) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+const msToHms = (ms: number) => {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n < 0) return "00:00:00";
+  const totalSec = Math.floor(n / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (v: number) => String(v).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+};
+
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
 export async function GET() {
   try {
     const rows = db
@@ -29,7 +51,7 @@ export async function GET() {
       "ID участника",
       "№ вопроса",
       "Введённый ответ",
-      "Время чтения (сек)",
+      "Время чтения (ч:м:с)",
       "Балл ответа",
       "Сумма баллов",
       "Дата",
@@ -37,15 +59,15 @@ export async function GET() {
 
     const rowsHtml = rows
       .map((r) => {
-        const sec = (Number(r.readingTimeMs) / 1000).toFixed(2);
+        const hms = msToHms(r.readingTimeMs);
         return `<tr>
   <td>${esc(r.participantId)}</td>
   <td>${esc(r.questionNumber)}</td>
   <td>${esc(r.answerInput)}</td>
-  <td>${esc(sec)}</td>
+  <td>${esc(hms)}</td>
   <td>${esc(r.answerScore)}</td>
   <td>${esc(r.totalScore)}</td>
-  <td>${esc(new Date(r.createdAt).toISOString())}</td>
+  <td>${esc(fmtDate(r.createdAt))}</td>
 </tr>`;
       })
       .join("\n");

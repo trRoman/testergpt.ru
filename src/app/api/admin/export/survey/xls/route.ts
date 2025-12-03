@@ -7,6 +7,17 @@ const esc = (s: unknown) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
 export async function GET() {
   try {
     const rows = db
@@ -41,7 +52,7 @@ export async function GET() {
   <td>${esc(r.gender)}</td>
   <td>${esc(r.education)}</td>
   <td>${esc(r.llmUsage)}</td>
-  <td>${esc(new Date(r.createdAt).toISOString())}</td>
+  <td>${esc(fmtDate(r.createdAt))}</td>
 </tr>`;
       })
       .join("\n");
