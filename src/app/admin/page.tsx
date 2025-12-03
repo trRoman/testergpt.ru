@@ -53,10 +53,27 @@ export default async function AdminPage() {
   }
 
   const shortId = (id: string) => (id && id.length > 4 ? `…${id.slice(-4)}` : id ?? "");
-  const msToSec = (ms: number) => {
+  const msToHms = (ms: number) => {
     const n = typeof ms === "number" ? ms : Number(ms);
-    if (Number.isNaN(n)) return "";
-    return (n / 1000).toFixed(2);
+    if (!Number.isFinite(n) || n < 0) return "00:00:00";
+    const totalSec = Math.floor(n / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const pad = (v: number) => String(v).padStart(2, "0");
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  };
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
   };
 
   const test1Rows = db
@@ -107,7 +124,7 @@ export default async function AdminPage() {
                     <td className="px-3 py-2">{r.gender}</td>
                     <td className="px-3 py-2">{r.education}</td>
                     <td className="px-3 py-2">{r.llmUsage}</td>
-                    <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">{fmtDate(r.createdAt)}</td>
                     <td className="px-3 py-2">
                       <AdminDeleteButton endpoint="/api/admin/delete/survey" id={r.id} />
                     </td>
@@ -135,7 +152,7 @@ export default async function AdminPage() {
                   <th className="px-3 py-2 text-left">ID участника</th>
                   <th className="px-3 py-2 text-left">№ вопроса</th>
                   <th className="px-3 py-2 text-left">Введённый ответ</th>
-                  <th className="px-3 py-2 text-left">Время чтения (сек)</th>
+                  <th className="px-3 py-2 text-left">Время чтения (ч:м:с)</th>
                   <th className="px-3 py-2 text-left">Балл ответа</th>
                   <th className="px-3 py-2 text-left">Сумма баллов</th>
                   <th className="px-3 py-2 text-left">Дата</th>
@@ -148,10 +165,10 @@ export default async function AdminPage() {
                     <td className="px-3 py-2">{shortId(r.participantId)}</td>
                     <td className="px-3 py-2">{r.questionNumber}</td>
                     <td className="px-3 py-2 break-all">{r.answerInput}</td>
-                    <td className="px-3 py-2">{msToSec(r.readingTimeMs)}</td>
+                    <td className="px-3 py-2">{msToHms(r.readingTimeMs)}</td>
                     <td className="px-3 py-2">{r.answerScore}</td>
                     <td className="px-3 py-2">{r.totalScore}</td>
-                    <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">{fmtDate(r.createdAt)}</td>
                     <td className="px-3 py-2">
                       <AdminDeleteButton endpoint="/api/admin/delete/test1" id={r.id} />
                     </td>
@@ -181,10 +198,10 @@ export default async function AdminPage() {
                   <th className="px-3 py-2 text-left">Тема сюжета</th>
                   <th className="px-3 py-2 text-left">№ задания</th>
                   <th className="px-3 py-2 text-left">№ последовательности</th>
-                  <th className="px-3 py-2 text-left">Время чтения (сек)</th>
+                  <th className="px-3 py-2 text-left">Время чтения (ч:м:с)</th>
                   <th className="px-3 py-2 text-left">Балл доверия</th>
                   <th className="px-3 py-2 text-left">Кнопка источника</th>
-                  <th className="px-3 py-2 text-left">Время в модалке (сек)</th>
+                  <th className="px-3 py-2 text-left">Время в модалке (ч:м:с)</th>
                   <th className="px-3 py-2 text-left">В модалке {'>'} 5 с</th>
                   <th className="px-3 py-2 text-left">Клик ссылки</th>
                   <th className="px-3 py-2 text-left">Дата</th>
@@ -199,13 +216,13 @@ export default async function AdminPage() {
                     <td className="px-3 py-2">{r.plotTopic}</td>
                     <td className="px-3 py-2">{r.taskNumber}</td>
                     <td className="px-3 py-2">{r.sequenceNumber}</td>
-                    <td className="px-3 py-2">{msToSec(r.readingTimeMs)}</td>
+                    <td className="px-3 py-2">{msToHms(r.readingTimeMs)}</td>
                     <td className="px-3 py-2">{r.trustScore}</td>
                     <td className="px-3 py-2">{r.sourceButtonClicked ? "Да" : "Нет"}</td>
-                    <td className="px-3 py-2">{msToSec(r.timeInSourceModalMs)}</td>
+                    <td className="px-3 py-2">{msToHms(r.timeInSourceModalMs)}</td>
                     <td className="px-3 py-2">{r.timeInSourceModalGt5Sec ? "Да" : "Нет"}</td>
                     <td className="px-3 py-2">{r.linkClicked ? "Да" : "Нет"}</td>
-                    <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">{fmtDate(r.createdAt)}</td>
                     <td className="px-3 py-2">
                       <AdminDeleteButton endpoint="/api/admin/delete/test2" id={r.id} />
                     </td>

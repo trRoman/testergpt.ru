@@ -31,6 +31,10 @@ npm run start
 sudo nginx -t
 sudo systemctl reload nginx
 sudo systemctl restart testergpt
+sudo systemctl stop testergpt
+cd /var/www/testergpt
+npm run build
+sudo chown -R www-data:www-data .next prisma
 
 <!-- Перезагрузка сервиса testergpt: -->
 sudo systemctl daemon-reload
