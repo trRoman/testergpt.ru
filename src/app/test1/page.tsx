@@ -77,7 +77,8 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 		.trim();
 
 	if (questionId === 1) {
-		return answer === "мэри" || answer === "мери";
+		// Засчитываем любые фразы, содержащие "мэри" или "мери" (без учёта регистра/пунктуации)
+		return answerNoPunct.includes("мэри") || answerNoPunct.includes("мери");
 	}
 
 	if (questionId === 2) {
