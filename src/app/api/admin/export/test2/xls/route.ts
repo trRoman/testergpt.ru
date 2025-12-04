@@ -18,16 +18,25 @@ const msToHms = (ms: number) => {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 };
 
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
+const fmtDate = (value: string) => {
+  if (/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/.test(value)) return value;
+  const tryFormat = (d: Date) => {
+    if (isNaN(d.getTime())) return String(value ?? "");
+    const pad = (v: number) => String(v).padStart(2, "0");
+    const DD = pad(d.getDate());
+    const MM = pad(d.getMonth() + 1);
+    const YYYY = d.getFullYear();
+    const hh = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return `${DD}-${MM}-${YYYY} ${hh}:${mm}:${ss}`;
+  };
+  const cleaned = value.replace(/ UTC[+-]\d{2}:\d{2}$/, "");
+  let d = new Date(cleaned.replace(" ", "T"));
+  if (!isNaN(d.getTime())) return tryFormat(d);
+  d = new Date(value);
+  return tryFormat(d);
+};
 
 export async function GET() {
   try {
@@ -35,7 +44,7 @@ export async function GET() {
       .prepare(
         `SELECT participantId, tone, plotTopic, taskNumber, sequenceNumber, readingTimeMs, trustScore, sourceButtonClicked, timeInSourceModalMs, timeInSourceModalGt5Sec, linkClicked, createdAt
          FROM "Test2Result"
-         ORDER BY createdAt DESC`,
+         ORDER BY id DESC`,
       )
       .all() as Array<{
         participantId: string;

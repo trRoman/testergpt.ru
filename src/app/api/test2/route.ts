@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
 			timeInSourceModalMs = 0,
 			timeInSourceModalGt5Sec = false,
 			linkClicked = false,
+			createdAtLocal,
 		} = body ?? {};
 
 		if (typeof participantId !== "string") {
@@ -54,24 +55,45 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		const stmt = db.prepare(
-			`INSERT INTO "Test2Result"
-      ("participantId","tone","plotTopic","taskNumber","sequenceNumber","readingTimeMs","trustScore","sourceButtonClicked","timeInSourceModalMs","timeInSourceModalGt5Sec","linkClicked")
-      VALUES (@participantId,@tone,@plotTopic,@taskNumber,@sequenceNumber,@readingTimeMs,@trustScore,@sourceButtonClicked,@timeInSourceModalMs,@timeInSourceModalGt5Sec,@linkClicked)`,
+		const hasClientTime = typeof createdAtLocal === "string" && createdAtLocal.length >= 8;
+		const sql = hasClientTime
+			? `INSERT INTO "Test2Result"
+        ("participantId","tone","plotTopic","taskNumber","sequenceNumber","readingTimeMs","trustScore","sourceButtonClicked","timeInSourceModalMs","timeInSourceModalGt5Sec","linkClicked","createdAt")
+        VALUES (@participantId,@tone,@plotTopic,@taskNumber,@sequenceNumber,@readingTimeMs,@trustScore,@sourceButtonClicked,@timeInSourceModalMs,@timeInSourceModalGt5Sec,@linkClicked,@createdAt)`
+			: `INSERT INTO "Test2Result"
+        ("participantId","tone","plotTopic","taskNumber","sequenceNumber","readingTimeMs","trustScore","sourceButtonClicked","timeInSourceModalMs","timeInSourceModalGt5Sec","linkClicked")
+        VALUES (@participantId,@tone,@plotTopic,@taskNumber,@sequenceNumber,@readingTimeMs,@trustScore,@sourceButtonClicked,@timeInSourceModalMs,@timeInSourceModalGt5Sec,@linkClicked)`;
+		const stmt = db.prepare(sql);
+		const result = stmt.run(
+			hasClientTime
+				? {
+						participantId,
+						tone: toneNorm,
+						plotTopic: topicNorm,
+						taskNumber,
+						sequenceNumber,
+						readingTimeMs,
+						trustScore,
+						sourceButtonClicked: sourceButtonClicked ? 1 : 0,
+						timeInSourceModalMs: Number(timeInSourceModalMs) || 0,
+						timeInSourceModalGt5Sec: timeInSourceModalGt5Sec ? 1 : 0,
+						linkClicked: linkClicked ? 1 : 0,
+						createdAt: createdAtLocal,
+				  }
+				: {
+						participantId,
+						tone: toneNorm,
+						plotTopic: topicNorm,
+						taskNumber,
+						sequenceNumber,
+						readingTimeMs,
+						trustScore,
+						sourceButtonClicked: sourceButtonClicked ? 1 : 0,
+						timeInSourceModalMs: Number(timeInSourceModalMs) || 0,
+						timeInSourceModalGt5Sec: timeInSourceModalGt5Sec ? 1 : 0,
+						linkClicked: linkClicked ? 1 : 0,
+				  },
 		);
-		const result = stmt.run({
-			participantId,
-			tone: toneNorm,
-			plotTopic: topicNorm,
-			taskNumber,
-			sequenceNumber,
-			readingTimeMs,
-			trustScore,
-			sourceButtonClicked: sourceButtonClicked ? 1 : 0,
-			timeInSourceModalMs: Number(timeInSourceModalMs) || 0,
-			timeInSourceModalGt5Sec: timeInSourceModalGt5Sec ? 1 : 0,
-			linkClicked: linkClicked ? 1 : 0,
-		});
 
 		return NextResponse.json({ id: Number(result.lastInsertRowid) });
 	} catch (error) {

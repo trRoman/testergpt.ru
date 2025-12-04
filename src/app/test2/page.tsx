@@ -130,8 +130,21 @@ export default function Test2Page() {
 	const [sourceButtonClicked, setSourceButtonClicked] = useState(false);
 	const [linkClicked, setLinkClicked] = useState(false);
 	const [finished, setFinished] = useState(false);
-	const [previewOpen, setPreviewOpen] = useState(false);
-	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+	const SESSION_KEY = "test2_session";
+
+	function buildClientLocalTimestamp(): string {
+		const d = new Date();
+		const pad = (v: number) => String(v).padStart(2, "0");
+		const Y = d.getFullYear();
+		const M = pad(d.getMonth() + 1);
+		const D = pad(d.getDate());
+		const h = pad(d.getHours());
+		const m = pad(d.getMinutes());
+		const s = pad(d.getSeconds());
+		// DD-MM-YYYY HH:mm:ss (локальное время пользователя)
+		return `${D}-${M}-${Y} ${h}:${m}:${s}`;
+	}
 
 	useEffect(() => {
 		const existing = window.localStorage.getItem("participantId");
@@ -154,6 +167,35 @@ export default function Test2Page() {
 		}
 	}, []);
 
+	// Восстанавливаем сессию теста 2, если есть
+	useEffect(() => {
+		try {
+			const raw = window.localStorage.getItem(SESSION_KEY);
+			if (raw) {
+				const saved = JSON.parse(raw) as {
+					started?: boolean;
+					finished?: boolean;
+					currentIndex?: number;
+					questions?: SessionQuestion[];
+				};
+				if (saved?.questions && Array.isArray(saved.questions) && saved.questions.length === 4) {
+					setQuestions(saved.questions);
+				}
+				if (saved?.started) {
+					setStarted(true);
+				}
+				if (Number.isFinite(saved?.currentIndex)) {
+					setCurrentIndex(saved!.currentIndex as number);
+				}
+				if (saved?.finished) {
+					setFinished(true);
+				} else if (saved?.started) {
+					setQuestionStartMs(Date.now());
+				}
+			}
+		} catch {}
+	}, []);
+
 	const current = useMemo(
 		() => (questions.length > 0 ? questions[currentIndex] : null),
 		[questions, currentIndex],
@@ -165,7 +207,8 @@ export default function Test2Page() {
 	);
 
 	function handleStart() {
-		setQuestions(buildSessionQuestions());
+		const sessionQs = buildSessionQuestions();
+		setQuestions(sessionQs);
 		setStarted(true);
 		setFinished(false);
 		setTrust(null);
@@ -175,6 +218,18 @@ export default function Test2Page() {
 		setVerifyTimeMs(0);
 		setSourceButtonClicked(false);
 		setLinkClicked(false);
+		// Сохраняем старт сессии
+		try {
+			window.localStorage.setItem(
+				SESSION_KEY,
+				JSON.stringify({
+					started: true,
+					finished: false,
+					currentIndex: 0,
+					questions: sessionQs,
+				}),
+			);
+		} catch {}
 	}
 
 	async function handleNext() {
@@ -198,12 +253,14 @@ export default function Test2Page() {
 					timeInSourceModalMs: verifyTimeMs,
 					timeInSourceModalGt5Sec: verifyTimeMs >= 5000,
 					linkClicked,
+					createdAtLocal: buildClientLocalTimestamp(),
 				}),
 			});
 		} catch {}
 
 		if (currentIndex < 3) {
-			setCurrentIndex((i) => i + 1);
+			const nextIndex = currentIndex + 1;
+			setCurrentIndex(nextIndex);
 			setTrust(null);
 			setQuestionStartMs(Date.now());
 			setVerifyOpen(false);
@@ -211,10 +268,37 @@ export default function Test2Page() {
 			setVerifyTimeMs(0);
 			setSourceButtonClicked(false);
 			setLinkClicked(false);
+			// Обновляем прогресс сессии
+			try {
+				const raw = window.localStorage.getItem(SESSION_KEY);
+				if (raw) {
+					const saved = JSON.parse(raw) as any;
+					window.localStorage.setItem(
+						SESSION_KEY,
+						JSON.stringify({
+							...saved,
+							started: true,
+							finished: false,
+							currentIndex: nextIndex,
+						}),
+					);
+				}
+			} catch {}
 		} else {
 			setFinished(true);
 			try {
 				window.localStorage.setItem("finishedAll", "1");
+				// Помечаем сессию как завершённую
+				const raw = window.localStorage.getItem(SESSION_KEY);
+				const saved = raw ? (JSON.parse(raw) as any) : {};
+				window.localStorage.setItem(
+					SESSION_KEY,
+					JSON.stringify({
+						...saved,
+						started: true,
+						finished: true,
+					}),
+				);
 			} catch {}
 		}
 	}
@@ -234,15 +318,8 @@ export default function Test2Page() {
 		setVerifyOpenedAt(null);
 	}
 
-	function openPreview(url: string) {
+	function markLinkClick() {
 		setLinkClicked(true);
-		setPreviewUrl(url);
-		setPreviewOpen(true);
-	}
-
-	function closePreview() {
-		setPreviewOpen(false);
-		setPreviewUrl(null);
 	}
 
 	function renderVerifyContent() {
@@ -260,7 +337,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://mgppu.ru/news/2212"
-							onClick={(e) => { e.preventDefault(); openPreview("https://mgppu.ru/news/2212"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть материал МГППУ
@@ -276,7 +355,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://www.psychologies.ru/articles/taino-chitaete-perepisku-partnera-uznaite-chto-eto-govorit-pro-vas/"
-							onClick={(e) => { e.preventDefault(); openPreview("https://www.psychologies.ru/articles/taino-chitaete-perepisku-partnera-uznaite-chto-eto-govorit-pro-vas/"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть статью Psychologies
@@ -292,7 +373,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10858624/"
-							onClick={(e) => { e.preventDefault(); openPreview("https://pmc.ncbi.nlm.nih.gov/articles/PMC10858624/"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть научную статью (PMC)
@@ -314,7 +397,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://stoneforest.ru/event/history/menzurnoe-fextovanie/"
-							onClick={(e) => { e.preventDefault(); openPreview("https://stoneforest.ru/event/history/menzurnoe-fextovanie/"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть статью Stoneforest
@@ -330,7 +415,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://ekladata.com/QjwVHL3PEazKN208wMXT57n--kQ/Die-Waffen-Hoch-The-Resiliency-of-Academic-Fencing-in-Germany.pdf"
-							onClick={(e) => { e.preventDefault(); openPreview("https://ekladata.com/QjwVHL3PEazKN208wMXT57n--kQ/Die-Waffen-Hoch-The-Resiliency-of-Academic-Fencing-in-Germany.pdf"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть исследование (PDF)
@@ -346,7 +433,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://diletant.media/articles/45344069/"
-							onClick={(e) => { e.preventDefault(); openPreview("https://diletant.media/articles/45344069/"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть статью Diletant.media
@@ -368,7 +457,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://worldclassmag.com/food/pered-snom-7-issledovanii-o-tom-stoit-li-est-na-noch/"
-							onClick={(e) => { e.preventDefault(); openPreview("https://worldclassmag.com/food/pered-snom-7-issledovanii-o-tom-stoit-li-est-na-noch/"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть статью WorldClassMag
@@ -384,7 +475,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://www.mdpi.com/2076-3417/14/15/6701"
-							onClick={(e) => { e.preventDefault(); openPreview("https://www.mdpi.com/2076-3417/14/15/6701"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть научную статью Applied Sciences
@@ -400,7 +493,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://doctorpiter.ru/obraz-zhizni/endokrinolog-prokopenko-rasskazala-chto-sest-na-noch-chtoby-utolit-golod-id885712/"
-							onClick={(e) => { e.preventDefault(); openPreview("https://doctorpiter.ru/obraz-zhizni/endokrinolog-prokopenko-rasskazala-chto-sest-na-noch-chtoby-utolit-golod-id885712/"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть материал Doctorpiter
@@ -422,7 +517,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://elibrary.ru/item.asp?id=30053796"
-							onClick={(e) => { e.preventDefault(); openPreview("https://elibrary.ru/item.asp?id=30053796"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть статью на eLIBRARY
@@ -438,7 +535,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://research-journal.org/archive/11-125-2022-november/10.23670/IRJ.2022.125.108"
-							onClick={(e) => { e.preventDefault(); openPreview("https://research-journal.org/archive/11-125-2022-november/10.23670/IRJ.2022.125.108"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть статью International Research Journal
@@ -454,7 +553,9 @@ export default function Test2Page() {
 						</Typography>
 						<a
 							href="https://onlinelibrary.wiley.com/doi/full/10.1002/anzf.1398"
-							onClick={(e) => { e.preventDefault(); openPreview("https://onlinelibrary.wiley.com/doi/full/10.1002/anzf.1398"); }}
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={markLinkClick}
 							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
 						>
 							Открыть научную статью (Wiley)
@@ -624,29 +725,7 @@ export default function Test2Page() {
 					</DialogActions>
 				</Dialog>
 
-			<Dialog
-				open={previewOpen}
-				onClose={closePreview}
-				fullWidth
-				maxWidth="lg"
-				PaperProps={{
-					sx: { bgcolor: "background.paper", color: "common.white", borderRadius: "30px" },
-				}}
-			>
-				<DialogTitle sx={{ color: "common.white" }}>Просмотр источника</DialogTitle>
-				<DialogContent dividers sx={{ p: 0 }}>
-					{previewUrl ? (
-						<iframe
-							title="source-preview"
-							src={previewUrl}
-							style={{ width: "100%", height: "70vh", border: "none" }}
-						/>
-					) : null}
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={closePreview}>Закрыть</Button>
-				</DialogActions>
-			</Dialog>
+			{/* Окно предпросмотра удалено — ссылки открываются в новой вкладке */}
 			</Container>
 		</div>
 	);

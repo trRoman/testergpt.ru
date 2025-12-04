@@ -63,29 +63,41 @@ export default async function AdminPage() {
     const pad = (v: number) => String(v).padStart(2, "0");
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   };
-  const fmtDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    });
+  const fmtDate = (value: string) => {
+    // Если уже в нужном виде DD-MM-YYYY HH:mm:ss — возвращаем как есть
+    if (/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/.test(value)) return value;
+    // Пытаемся распарсить известные формы и привести к DD-MM-YYYY HH:mm:ss
+    const tryFormat = (d: Date) => {
+      if (isNaN(d.getTime())) return String(value ?? "");
+      const pad = (v: number) => String(v).padStart(2, "0");
+      const DD = pad(d.getDate());
+      const MM = pad(d.getMonth() + 1);
+      const YYYY = d.getFullYear();
+      const hh = pad(d.getHours());
+      const mm = pad(d.getMinutes());
+      const ss = pad(d.getSeconds());
+      return `${DD}-${MM}-${YYYY} ${hh}:${mm}:${ss}`;
+    };
+    // Уберём возможный суффикс " UTC±HH:MM"
+    const cleaned = value.replace(/ UTC[+-]\d{2}:\d{2}$/, "");
+    // Пробуем ISO-подобный разбор
+    let d = new Date(cleaned.replace(" ", "T"));
+    if (!isNaN(d.getTime())) return tryFormat(d);
+    // Последняя попытка — стандартный парсер
+    d = new Date(value);
+    return tryFormat(d);
   };
 
   const test1Rows = db
-    .prepare(`SELECT id, participantId, questionNumber, answerInput, readingTimeMs, answerScore, totalScore, createdAt FROM "Test1Result" ORDER BY createdAt DESC`)
+    .prepare(`SELECT id, participantId, questionNumber, answerInput, readingTimeMs, answerScore, totalScore, createdAt FROM "Test1Result" ORDER BY id DESC`)
     .all() as unknown as Test1Row[];
 
   const test2Rows = db
-    .prepare(`SELECT id, participantId, tone, plotTopic, taskNumber, sequenceNumber, readingTimeMs, trustScore, sourceButtonClicked, timeInSourceModalMs, timeInSourceModalGt5Sec, linkClicked, createdAt FROM "Test2Result" ORDER BY createdAt DESC`)
+    .prepare(`SELECT id, participantId, tone, plotTopic, taskNumber, sequenceNumber, readingTimeMs, trustScore, sourceButtonClicked, timeInSourceModalMs, timeInSourceModalGt5Sec, linkClicked, createdAt FROM "Test2Result" ORDER BY id DESC`)
     .all() as unknown as Test2Row[];
 
   const surveyRows = db
-    .prepare(`SELECT id, participantId, age, gender, education, llmUsage, createdAt FROM "Survey" ORDER BY createdAt DESC`)
+    .prepare(`SELECT id, participantId, age, gender, education, llmUsage, createdAt FROM "Survey" ORDER BY id DESC`)
     .all() as unknown as SurveyRow[];
 
   return (

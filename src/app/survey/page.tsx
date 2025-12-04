@@ -56,6 +56,18 @@ export default function SurveyPage() {
 		if (!canSubmit || !participantId) return;
 		setError(null);
 		setSubmitting(true);
+		const buildClientLocalTimestamp = () => {
+			const d = new Date();
+			const pad = (v: number) => String(v).padStart(2, "0");
+			const Y = d.getFullYear();
+			const M = pad(d.getMonth() + 1);
+			const D = pad(d.getDate());
+			const h = pad(d.getHours());
+			const m = pad(d.getMinutes());
+			const s = pad(d.getSeconds());
+			// DD-MM-YYYY HH:mm:ss (локальное время пользователя)
+			return `${D}-${M}-${Y} ${h}:${m}:${s}`;
+		};
 		try {
 			const res = await fetch("/api/survey", {
 				method: "POST",
@@ -66,6 +78,7 @@ export default function SurveyPage() {
 					gender,
 					education,
 					llmUsage,
+					createdAtLocal: buildClientLocalTimestamp(),
 				}),
 			});
 			if (!res.ok) {

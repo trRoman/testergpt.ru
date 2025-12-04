@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
 		const gender: string = String(body?.gender ?? "");
 		const education: string = String(body?.education ?? "");
 		const llmUsage: string = String(body?.llmUsage ?? "");
+		const createdAtLocal: string | undefined = body?.createdAtLocal;
 
 		if (
 			!participantId ||
@@ -22,10 +23,17 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: "Неверные данные" }, { status: 400 });
 		}
 
-		const stmt = db.prepare(
-			`INSERT INTO "Survey" (participantId, age, gender, education, llmUsage) VALUES (?, ?, ?, ?, ?)`,
-		);
-		stmt.run(participantId, age, gender, education, llmUsage);
+		if (createdAtLocal && typeof createdAtLocal === "string" && createdAtLocal.length >= 8) {
+			const stmt = db.prepare(
+				`INSERT INTO "Survey" (participantId, age, gender, education, llmUsage, createdAt) VALUES (?, ?, ?, ?, ?, ?)`,
+			);
+			stmt.run(participantId, age, gender, education, llmUsage, createdAtLocal);
+		} else {
+			const stmt = db.prepare(
+				`INSERT INTO "Survey" (participantId, age, gender, education, llmUsage) VALUES (?, ?, ?, ?, ?)`,
+			);
+			stmt.run(participantId, age, gender, education, llmUsage);
+		}
 
 		return NextResponse.json({ ok: true });
 	} catch (e) {

@@ -324,6 +324,23 @@ export default function Test1Page() {
 	const [totalScore, setTotalScore] = useState(0);
 	const [questionStartMs, setQuestionStartMs] = useState<number | null>(null);
 
+	// Ключи localStorage
+	const PROGRESS_KEY = "test1_progress";
+	const ANSWER_DRAFT_PREFIX = "test1_answer_draft_";
+
+	function buildClientLocalTimestamp(): string {
+		const d = new Date();
+		const pad = (v: number) => String(v).padStart(2, "0");
+		const Y = d.getFullYear();
+		const M = pad(d.getMonth() + 1);
+		const D = pad(d.getDate());
+		const h = pad(d.getHours());
+		const m = pad(d.getMinutes());
+		const s = pad(d.getSeconds());
+		// DD-MM-YYYY HH:mm:ss (локальное время пользователя)
+		return `${D}-${M}-${Y} ${h}:${m}:${s}`;
+	}
+
 	// Получаем/создаём participantId при первом заходе на страницу
 	useEffect(() => {
 		const existing = window.localStorage.getItem("participantId");
@@ -347,6 +364,36 @@ export default function Test1Page() {
 			});
 	}, []);
 
+	// Восстанавливаем прогресс (если есть)
+	useEffect(() => {
+		try {
+			const raw = window.localStorage.getItem(PROGRESS_KEY);
+			if (raw) {
+				const saved = JSON.parse(raw) as {
+					started?: boolean;
+					currentIndex?: number;
+					totalScore?: number;
+					finished?: boolean;
+				};
+				if (saved?.finished) {
+					// Тест 1 завершён → идём в тест 2
+					router.replace("/test2");
+					return;
+				}
+				if (saved?.started) {
+					setStarted(true);
+					if (Number.isFinite(saved.currentIndex)) {
+						setCurrentIndex(saved.currentIndex as number);
+					}
+					if (Number.isFinite(saved.totalScore)) {
+						setTotalScore(saved.totalScore as number);
+					}
+					setQuestionStartMs(Date.now());
+				}
+			}
+		} catch {}
+	}, [router]);
+
 	// Текущий вопрос
 	const currentQuestion = useMemo(() => QUESTIONS[currentIndex], [currentIndex]);
 
@@ -360,7 +407,35 @@ export default function Test1Page() {
 		setStarted(true);
 		setAnswer("");
 		setQuestionStartMs(Date.now());
+		// Сохраняем начальное состояние прогресса
+		try {
+			window.localStorage.setItem(
+				PROGRESS_KEY,
+				JSON.stringify({ started: true, currentIndex: 0, totalScore: 0, finished: false }),
+			);
+		} catch {}
 	}
+
+	// Загружаем черновик ответа при смене вопроса
+	useEffect(() => {
+		try {
+			const draft = window.localStorage.getItem(ANSWER_DRAFT_PREFIX + String(currentIndex));
+			setAnswer(draft ?? "");
+		} catch {
+			setAnswer("");
+		}
+	}, [currentIndex]);
+
+	// Сохраняем черновик ответа
+	useEffect(() => {
+		try {
+			if (answer) {
+				window.localStorage.setItem(ANSWER_DRAFT_PREFIX + String(currentIndex), answer);
+			} else {
+				window.localStorage.removeItem(ANSWER_DRAFT_PREFIX + String(currentIndex));
+			}
+		} catch {}
+	}, [answer, currentIndex]);
 
 	async function handleNext() {
 		// Время чтения и ответ на текущий вопрос
@@ -384,6 +459,7 @@ export default function Test1Page() {
 					readingTimeMs,
 					answerScore,
 					totalScore: newTotal,
+					createdAtLocal: buildClientLocalTimestamp(),
 				}),
 			});
 		} catch {
@@ -391,14 +467,42 @@ export default function Test1Page() {
 		}
 
 		setTotalScore(newTotal);
+		// Чистим черновик для текущего вопроса
+		try {
+			window.localStorage.removeItem(ANSWER_DRAFT_PREFIX + String(currentIndex));
+		} catch {}
 
 		// Переходим к следующему вопросу или завершаем
 		if (currentIndex < QUESTIONS.length - 1) {
-			setCurrentIndex((i) => i + 1);
+			const nextIndex = currentIndex + 1;
+			setCurrentIndex(nextIndex);
 			setAnswer("");
 			setQuestionStartMs(Date.now());
+			// Обновляем прогресс
+			try {
+				window.localStorage.setItem(
+					PROGRESS_KEY,
+					JSON.stringify({
+						started: true,
+						currentIndex: nextIndex,
+						totalScore: newTotal,
+						finished: false,
+					}),
+				);
+			} catch {}
 		} else {
 			// Завершение тестирования 1 → перейти к тестированию 2
+			try {
+				window.localStorage.setItem(
+					PROGRESS_KEY,
+					JSON.stringify({
+						started: true,
+						currentIndex,
+						totalScore: newTotal,
+						finished: true,
+					}),
+				);
+			} catch {}
 			router.push("/test2");
 		}
 	}

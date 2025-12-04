@@ -37,6 +37,7 @@ sudo systemctl reload nginx
 sudo systemctl restart testergpt
 sudo systemctl stop testergpt
 cd /var/www/testergpt
+cd /var/www/testergpt/prisma
 npm run build
 sudo chown -R www-data:www-data .next prisma
 
@@ -55,9 +56,9 @@ git checkout --ours dev.db
 Укажите Git использовать удалённую версию:
 git checkout --theirs dev.db
 ls -la
-cp dev_bp8.db dev.db
-cp dev.db dev_bp9-1.db
-rm dev.db
+cp prisma/dev_bp8.db prisma/dev.db
+cp prisma/dev.db prisma/dev_bp1-1.db
+rm prisma/dev.db
 
 \\\\
 
