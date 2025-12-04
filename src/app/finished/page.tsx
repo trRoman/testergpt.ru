@@ -1,10 +1,13 @@
+// src/app/finished/page.tsx
+// Эта страница отображается после того, как пользователь прошел тестирование
+
 import { Container, Stack, Typography, Button } from "@mui/material";
 import Link from "next/link";
 
 export default function FinishedPage() {
 	return (
 		<div className="flex min-h-screen items-center justify-center font-sans">
-			<Container maxWidth="md" className="bg-white dark:bg-black rounded-xl p-10">
+			<Container maxWidth="md" className="rounded-xl p-10" sx={{ bgcolor: "background.paper" }}>
 				<Stack spacing={3} alignItems="center" textAlign="center">
 					<Typography variant="h4" component="h1" fontWeight={700} sx={{ color: "common.white" }}>
 						Вы уже прошли тестирование. Спасибо!
