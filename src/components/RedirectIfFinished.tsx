@@ -25,6 +25,12 @@ export default function RedirectIfFinished() {
 					return;
 				}
 			}
+			// Если анкета уже пройдена, но тесты ещё не начаты — сразу к тесту 1
+			const surveyDone = window.localStorage.getItem("surveyCompleted") === "1";
+			if (surveyDone) {
+				router.replace("/test1");
+				return;
+			}
 			// Если всё завершено — на страницу завершения
 			const flag = window.localStorage.getItem("finishedAll");
 			if (flag === "1") {

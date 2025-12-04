@@ -296,8 +296,25 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 			answer.includes("вдова") &&
 			(answer.includes("умер") || answer.includes("мертв") || answer.includes("мёртв") ||answer.includes("покой") || answer.includes("не может"));
 
+		// Учитываем прямые утверждения о смерти, даже без упоминания "вдова"
+		const saysDead =
+			answer.includes("умер") ||
+			answer.includes("мертв") ||
+			answer.includes("мёртв") ||
+			answer.includes("погиб") ||
+			answer.includes("скончал") ||
+			answer.includes("покой");
+		const negatedDead =
+			answer.includes("не умер") ||
+			answer.includes("не мертв") ||
+			answer.includes("не мёртв") ||
+			answer.includes("не погиб") ||
+			answer.includes("не скончал") ||
+			answer.includes("жив");
+
 		if (impossible) return true;
 		if (widowLogic) return true;
+		if (saysDead && !negatedDead) return true;
 
 		return false;
 	}
