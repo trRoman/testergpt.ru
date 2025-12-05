@@ -235,15 +235,43 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 
 		const mentionsSmoke = answer.includes("дым");
 		const noSmokePhrases =
-			(answer.includes("нет дыма") || answer.includes("дыма нет") || answer.includes("без дыма")) ||
-			(mentionsSmoke && (answer.includes("не") && (answer.includes("дымит") || answer.includes("дымится"))));
+			(answer.includes("нет дыма") ||
+				answer.includes("дыма нет") ||
+				answer.includes("без дыма") ||
+				answer.includes("дыма не имеется") ||
+				answer.includes("не имеется дыма") ||
+				answer.includes("дым отсутствует") ||
+				answer.includes("отсутствует дым")) ||
+				// Учитываем формулировки про отсутствие дыма (например, "нет дыма — это электропоезд")
+				(answer.includes("нет дыма") && answer.includes("электропоезд")) ||
+				(answer.includes("дыма нет") && answer.includes("электропоезд")) ||
+				(answer.includes("без дыма") && answer.includes("электропоезд")) ||
+				(answer.includes("дыма не имеется") && answer.includes("электропоезд")) ||
+				(answer.includes("не имеется дыма") && answer.includes("электропоезд")) ||
+				(answer.includes("дым отсутствует") && answer.includes("электропоезд")) ||
+				(answer.includes("отсутствует дым") && answer.includes("электропоезд")) ||
+			(mentionsSmoke &&
+				(answer.includes("не") &&
+					(answer.includes("дымит") || answer.includes("дымится"))));
 
 		const mentionsElectricTrain =
-			answer.includes("электропоезд") || answer.includes("электропоезд,") ||answer.includes("электро") || answer.includes("электричк");
+			answerNoPunct.includes("электропоезд") ||
+			answerNoPunct.includes("электро") ||
+			answerNoPunct.includes("электричк");
+
+		// Учитываем формулировки про отсутствие трубы (например, "трубы нет — это электропоезд")
+		const mentionsPipe = answer.includes("труб"); // труба/трубы/трубе/трубу
+		const noPipePhrases =
+			mentionsPipe &&
+			(answer.includes("нет") ||
+				answer.includes("без") ||
+				answer.includes("не имеется") ||
+				answer.includes("отсутствует"));
 
 		if (noDirection) return true;
 		if (noSmokePhrases) return true;
 		if (mentionsElectricTrain && noSmokePhrases) return true;
+		if (mentionsElectricTrain && noPipePhrases) return true;
 
 		return false;
 	}
