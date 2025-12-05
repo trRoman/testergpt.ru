@@ -300,11 +300,25 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 			answer.includes("не может быть") ||
 			answer.includes("некоррект");
 		// 
+		// Прямое указание, что мужчина мёртв (без обязательного упоминания "вдовы")
+		const saysDead =
+			// явные формулировки
+			answer.includes("он мертв") ||
+			answer.includes("он мёртв") ||
+			// более общие, с защитой от отрицаний
+			((answer.includes("мертв") || answer.includes("мёртв")) &&
+				!answer.includes("не мертв") &&
+				!answer.includes("не мёртв")) ||
+			(answer.includes("умер") && !answer.includes("не умер")) ||
+			(answer.includes("погиб") && !answer.includes("не погиб")) ||
+			(answer.includes("скончал") && !answer.includes("не скончал"));
+
 		const widowLogic =
 			answer.includes("вдова") &&
 			(answer.includes("умер") || answer.includes("мертв") || answer.includes("мёртв") ||answer.includes("покой") || answer.includes("не может"));
 
 		if (impossible) return true;
+		if (saysDead) return true;
 		if (widowLogic) return true;
 
 		return false;

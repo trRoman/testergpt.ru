@@ -6,10 +6,23 @@ ID 5501297
 Логин: root
 Пароль: 475NeziLc42lCBzQ
 
+cd /var/www/testergpt
+git pull origin main
+git fetch origin --prune
+git reset --hard origin/main
+npm install
+npm run build
+npm run start
+sudo nginx -t
+sudo systemctl reload nginx
+sudo systemctl restart testergpt
+sudo systemctl stop testergpt
+
 \\
 
 reg.ru
 oblachkopuhovoe@yandex.ru
+pusTDMpyzh2D58n
 9yt-uey-aKC-gQH
 
 https://dnsadmin.hosting.reg.ru/manager/ispmgr?rtm_source=e-mail&rtm_medium=e-mail&rtm_campaign=CloudVPSActivated
