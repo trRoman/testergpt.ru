@@ -13,11 +13,11 @@ export default function FinishedPage() {
 						Вы уже прошли тестирование. Спасибо!
 					</Typography>
 					<Typography variant="body1" sx={{ color: "common.white" }}>
-						Если хотите, вы можете вернуться на главную страницу.
+						Спасибо, что нашли время, включились в задания и помогли науке чуть лучше понять, как люди взаимодействуют с нейросетями.
 					</Typography>
 					<Stack direction="row" spacing={2} justifyContent="center">
 						<Link href="/">
-							<Button variant="outlined">На главную</Button>
+							<Button variant="outlined">Обновить</Button>
 						</Link>
 					</Stack>
 				</Stack>
