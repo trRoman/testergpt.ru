@@ -510,25 +510,7 @@ export default function Test2Page() {
 				<Stack spacing={2} sx={{ color: "common.white" }}>
 					<Stack spacing={0.5}>
 						<Typography variant="subtitle1" sx={{ color: "common.white" }}>
-							1) Падун М.А. «Тип привязанности и угрозы безопасности в супружеских отношениях» — eLIBRARY
-						</Typography>
-						<Typography variant="body2" sx={{ color: "common.white" }}>
-							Связь тревожного/избегающего типа привязанности с ревностью, страхом потери и риском внебрачных связей.
-						</Typography>
-						<a
-							href="https://elibrary.ru/item.asp?id=30053796"
-							target="_blank"
-							rel="noopener noreferrer"
-							onClick={markLinkClick}
-							style={{ color: "#4da3ff", textDecoration: "underline", cursor: "pointer" }}
-						>
-							Открыть статью на eLIBRARY
-						</a>
-					</Stack>
-
-					<Stack spacing={0.5}>
-						<Typography variant="subtitle1" sx={{ color: "common.white" }}>
-							2) Karabanova O.A., Shevlyakova E.V. — International Research Journal
+							1) Karabanova O.A., Shevlyakova E.V. — International Research Journal
 						</Typography>
 						<Typography variant="body2" sx={{ color: "common.white" }}>
 							Как типы привязанности влияют на устойчивость и адаптацию семьи к стрессам, близость и дистанцию партнёров.
@@ -546,7 +528,7 @@ export default function Test2Page() {
 
 					<Stack spacing={0.5}>
 						<Typography variant="subtitle1" sx={{ color: "common.white" }}>
-							3) Conradi H.J. et al. — Australian and New Zealand Journal of Family Therapy (Wiley)
+							2) Conradi H.J. et al. — Australian and New Zealand Journal of Family Therapy (Wiley)
 						</Typography>
 						<Typography variant="body2" sx={{ color: "common.white" }}>
 							Физическая дистанция между партнёрами как маркер особенностей привязанности и тревоги отвержения.
@@ -725,7 +707,7 @@ export default function Test2Page() {
 					</DialogActions>
 				</Dialog>
 
-			{/* Окно предпросмотра удалено — ссылки открываются в новой вкладке */}
+
 			</Container>
 		</div>
 	);

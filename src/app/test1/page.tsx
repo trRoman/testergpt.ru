@@ -77,7 +77,7 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 		.trim();
 
 	if (questionId === 1) {
-		// Засчитываем любые фразы, содержащие "мэри" или "мери" (без учёта регистра/пунктуации)
+		// Засчитываем любые фразы, содержащие "мэри" или "мери" (без учёта пунктуации)
 		return answerNoPunct.includes("мэри") || answerNoPunct.includes("мери");
 	}
 
@@ -235,36 +235,15 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 
 		const mentionsSmoke = answer.includes("дым");
 		const noSmokePhrases =
-			// Явные формулировки отсутствия дыма
-			answer.includes("нет дыма") ||
-			answer.includes("дыма нет") ||
-			answer.includes("без дыма") ||
-			answer.includes("дыма не имеется") ||
-			answer.includes("не имеется дыма") ||
-			answer.includes("никакого дыма") ||
-			answer.includes("дым отсутствует") ||
-			answer.includes("отсутствует дым") ||
-			// Отрицание действия дымления
-			(mentionsSmoke &&
-				(answer.includes("не") &&
-					(answer.includes("дымит") || answer.includes("дымится"))));
-
-		// Любое отрицание в связке со словом "дым" (например: "дыма не имеется")
-		const genericNegationSmoke =
-			mentionsSmoke &&
-			(answer.includes("нет") ||
-				answer.includes("не") ||
-				answer.includes("без") ||
-				answer.includes("отсутствует"));
+			(answer.includes("нет дыма") || answer.includes("дыма нет") || answer.includes("без дыма")) ||
+			(mentionsSmoke && (answer.includes("не") && (answer.includes("дымит") || answer.includes("дымится"))));
 
 		const mentionsElectricTrain =
-			answerNoPunct.includes("электропоезд") ||
-			answerNoPunct.includes("электро") ||
-			answerNoPunct.includes("электричк");
+			answer.includes("электропоезд") || answer.includes("электропоезд,") ||answer.includes("электро") || answer.includes("электричк");
 
 		if (noDirection) return true;
-		if (noSmokePhrases || genericNegationSmoke) return true;
-		if (mentionsElectricTrain && (noSmokePhrases || genericNegationSmoke)) return true;
+		if (noSmokePhrases) return true;
+		if (mentionsElectricTrain && noSmokePhrases) return true;
 
 		return false;
 	}
@@ -285,36 +264,20 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 
 	if (questionId === 9) {
 		// Смысл: ситуация невозможна (если есть вдова — он умер)
+		// Невозможная ситуация: мужчина женится на сестре своей вдовы
 		const impossible =
 			answer.includes("невозмож") ||
 			answer.includes("нельзя") ||
 			answer.includes("такого быть не может") ||
 			answer.includes("не может быть") ||
 			answer.includes("некоррект");
-
+		// 
 		const widowLogic =
 			answer.includes("вдова") &&
 			(answer.includes("умер") || answer.includes("мертв") || answer.includes("мёртв") ||answer.includes("покой") || answer.includes("не может"));
 
-		// Учитываем прямые утверждения о смерти, даже без упоминания "вдова"
-		const saysDead =
-			answer.includes("умер") ||
-			answer.includes("мертв") ||
-			answer.includes("мёртв") ||
-			answer.includes("погиб") ||
-			answer.includes("скончал") ||
-			answer.includes("покой");
-		const negatedDead =
-			answer.includes("не умер") ||
-			answer.includes("не мертв") ||
-			answer.includes("не мёртв") ||
-			answer.includes("не погиб") ||
-			answer.includes("не скончал") ||
-			answer.includes("жив");
-
 		if (impossible) return true;
 		if (widowLogic) return true;
-		if (saysDead && !negatedDead) return true;
 
 		return false;
 	}

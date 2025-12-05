@@ -47,39 +47,6 @@ export default function SurveyPage() {
 		}
 	}, []);
 
-	// Если анкета уже была заполнена ранее — не показываем форму повторно
-	useEffect(() => {
-		try {
-			// Продолжить незавершённые тесты при прямом заходе на /survey
-			const t2raw = window.localStorage.getItem("test2_session");
-			if (t2raw) {
-				const t2 = JSON.parse(t2raw) as { started?: boolean; finished?: boolean };
-				if (t2?.started && !t2?.finished) {
-					router.replace("/test2");
-					return;
-				}
-			}
-			const t1raw = window.localStorage.getItem("test1_progress");
-			if (t1raw) {
-				const t1 = JSON.parse(t1raw) as { started?: boolean; finished?: boolean };
-				if (t1?.started && !t1?.finished) {
-					router.replace("/test1");
-					return;
-				}
-				if (t1?.finished) {
-					router.replace("/test2");
-					return;
-				}
-			}
-			// Если анкета пройдена — сразу к тесту 1
-			if (window.localStorage.getItem("surveyCompleted") === "1") {
-				router.replace("/test1");
-			}
-		} catch {
-			// ignore
-		}
-	}, [router]);
-
 	const ageNum = Number(age);
 	const ageValid = Number.isFinite(ageNum) && ageNum >= 18 && ageNum <= 99;
 	const canSubmit = ageValid && gender && education && llmUsage && !!participantId && !submitting;
@@ -118,10 +85,6 @@ export default function SurveyPage() {
 				const data = await res.json().catch(() => ({}));
 				throw new Error(data?.error ?? "Не удалось сохранить анкету");
 			}
-			// Отмечаем анкету как завершённую, чтобы больше не показывать повторно
-			try {
-				window.localStorage.setItem("surveyCompleted", "1");
-			} catch {}
 			router.replace("/test1");
 		} catch (err: any) {
 			setError(err?.message ?? "Не удалось сохранить анкету");
