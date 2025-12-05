@@ -327,6 +327,7 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 	if (questionId === 10) {
 		// Смысл: ни один вариант не верен, т.к. желток жёлтый, а не белый
 		const neither =
+		// Учитываем все возможные формулировки отрицания
 			answer.includes("ни одно") ||
 			answer.includes("ни один") ||
 			answer.includes("ни первое ни второе") ||
@@ -341,6 +342,12 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 			answer.includes("оба не верн") ||
 			answer.includes("оба не правиль");
 
+		// Принимаем краткий ответ "жёлтый/желтый" без обязательного слова "желток"
+		const saysYellowOnly =
+			(answer.includes("жёлт") || answer.includes("желт")) &&
+			!answer.includes("не жёлт") &&
+			!answer.includes("не желт");
+
 		const yolkYellow =
 			answer.includes("желток") &&
 			(answer.includes("жёлт") || answer.includes("желт")); // жёлтый/желтый
@@ -350,6 +357,7 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 			(answer.includes("не бел") || answerNoPunct.includes("небел"));
 
 		if (neither) return true;
+		if (saysYellowOnly) return true;
 		if (yolkYellow) return true;
 		if (yolkNotWhite) return true;
 
