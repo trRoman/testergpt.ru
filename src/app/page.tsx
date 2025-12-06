@@ -35,14 +35,13 @@ export default function Home() {
 							Здравствуйте!
 						</Typography>
 						<Typography variant="body1" sx={{ color: "common.white" }}>
-							Этот онлайн-эксперимент проводится в рамках магистерской диссертации и посвящён
-							изучению того, как люди воспринимают и оценивают ответы генеративного искусственного интеллекта.
+							Этот онлайн-эксперимент проводится в рамках магистерской диссертации по киберпсихологии и посвящён тому, как люди воспринимают и оценивают ответы генеративного искусственного интеллекта.
 						</Typography>
 						<Typography variant="body1" sx={{ color: "common.white" }}>
 							Участие в исследовании займет примерно 20–25 минут.
 						</Typography>
 						<div className="text-left">
-							<Typography variant="body1" sx={{ color: "common.white" }}>Все ваши ответы будут:</Typography>
+							<Typography variant="body1" sx={{ color: "common.white" }}>Ваши ответы будут:</Typography>
 							<List
 								component="ul"
 								sx={{ listStyleType: "disc", pl: 3 }}
@@ -65,6 +64,9 @@ export default function Home() {
 							</List>
 						</div>
 						<Typography variant="body1" color="text.primary" fontWeight={500} sx={{ color: "common.white" }}>
+							<strong>Здесь нет «правильных» или «неправильных» ответов.</strong> Важно только ваше мнение.
+						</Typography>
+						<Typography variant="body1" color="text.primary" sx={{ color: "common.white" }}>
 							Если вы согласны принять участие в исследовании, пожалуйста, нажмите кнопку «Начать».
 						</Typography>
 					</Stack>

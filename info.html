@@ -7,6 +7,10 @@ ID 5501297
 Пароль: 475NeziLc42lCBzQ
 
 cd /var/www/testergpt
+git add .
+git commit -m "Обновил"
+git push origin main
+
 git pull origin main
 git fetch origin --prune
 git reset --hard origin/main
@@ -42,6 +46,7 @@ cd /var/www/testergpt
 git fetch origin --prune
 git reset --hard origin/main
 
+npm run dev
 npm install
 npm run build
 npm run start

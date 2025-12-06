@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		if (trustScore < 1 || trustScore > 10) {
+		if (trustScore < 0 || trustScore > 10) {
 			return NextResponse.json(
-				{ error: "trustScore должен быть от 1 до 10" },
+				{ error: "trustScore должен быть от 0 до 10" },
 				{ status: 400 },
 			);
 		}
