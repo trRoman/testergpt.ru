@@ -38,7 +38,7 @@ export default function Home() {
 							Этот онлайн-эксперимент проводится в рамках магистерской диссертации по киберпсихологии и посвящён тому, как люди воспринимают и оценивают ответы генеративного искусственного интеллекта.
 						</Typography>
 						<Typography variant="body1" sx={{ color: "common.white" }}>
-							Участие в исследовании займет примерно 20–25 минут.
+							Участие в исследовании займет примерно 15–20 минут.
 						</Typography>
 						<div className="text-left">
 							<Typography variant="body1" sx={{ color: "common.white" }}>Ваши ответы будут:</Typography>
