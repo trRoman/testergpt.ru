@@ -20,9 +20,9 @@ coverage/
 .vscode/
 
 # Env/config
-# .env
-# .env.*
-# !.env.example
+.env
+.env.*
+!.env.example
 
 # OS
 .DS_Store
