@@ -1,13 +1,12 @@
 import crypto from "crypto";
 
-const DEFAULT_EMAIL = "admin@ya.ru";
-const DEFAULT_PASSWORD = "9yt-uey-aKC-gQH";
-const DEFAULT_SECRET = "change-this-secret";
-
 export function getAuthConfig() {
-	const email = process.env.AUTH_EMAIL ?? DEFAULT_EMAIL;
-	const password = process.env.AUTH_PASSWORD ?? DEFAULT_PASSWORD;
-	const secret = process.env.AUTH_SECRET ?? DEFAULT_SECRET;
+	const email = process.env.AUTH_EMAIL;
+	const password = process.env.AUTH_PASSWORD;
+	const secret = process.env.AUTH_SECRET;
+	if (!email || !password || !secret) {
+		throw new Error("Missing AUTH_EMAIL, AUTH_PASSWORD or AUTH_SECRET in environment");
+	}
 	return { email, password, secret };
 }
 

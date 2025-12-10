@@ -22,6 +22,17 @@ sudo systemctl reload nginx
 sudo systemctl restart testergpt
 sudo systemctl stop testergpt
 
+sudo systemctl status testergpt --no-pager -l
+sudo journalctl -xeu testergpt.service --no-pager | tail -n 50
+curl -I http://127.0.0.1:3000
+dig +short A testergpt.ru
+
+Выпуск сертификата Let's Encrypt:
+sudo certbot --nginx -d testergpt.ru -d www.testergpt.ru -m you@example.com --agree-tos --no-eff-email
+
+Проверка работы приложения через HTTPS:
+curl -I https://testergpt.ru
+
 \\
 
 reg.ru
@@ -50,14 +61,26 @@ npm run dev
 npm install
 npm run build
 npm run start
+sudo journalctl -u testergpt -n 200 --no-pager
 sudo nginx -t
 sudo systemctl reload nginx
+sudo systemctl daemon-reload
 sudo systemctl restart testergpt
 sudo systemctl stop testergpt
+curl -I http://89.104.74.98
 cd /var/www/testergpt
 cd /var/www/testergpt/prisma
 npm run build
 sudo chown -R www-data:www-data .next prisma
+
+sudo systemctl stop testergpt
+cd /var/www/testergpt
+npm ci --include=optional
+npm run build
+sudo chown -R www-data:www-data prisma .next node_modules
+sudo systemctl start testergpt
+journalctl -u testergpt -f
+tail -f /var/log/nginx/access.log /var/log/nginx/error.log
 
 <!-- Перезагрузка сервиса testergpt: -->
 sudo systemctl daemon-reload
