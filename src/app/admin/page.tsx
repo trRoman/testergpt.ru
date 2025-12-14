@@ -63,7 +63,8 @@ export default async function AdminPage() {
     const pad = (v: number) => String(v).padStart(2, "0");
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   };
-  const fmtDate = (value: string) => {
+  const fmtDate = (value: string | null | undefined) => {
+    if (!value) return "";
     // Если уже в нужном виде DD-MM-YYYY HH:mm:ss — возвращаем как есть
     if (/^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/.test(value)) return value;
     // Пытаемся распарсить известные формы и привести к DD-MM-YYYY HH:mm:ss
@@ -79,7 +80,7 @@ export default async function AdminPage() {
       return `${DD}-${MM}-${YYYY} ${hh}:${mm}:${ss}`;
     };
     // Уберём возможный суффикс " UTC±HH:MM"
-    const cleaned = value.replace(/ UTC[+-]\d{2}:\d{2}$/, "");
+    const cleaned = String(value).replace(/ UTC[+-]\d{2}:\d{2}$/, "");
     // Пробуем ISO-подобный разбор
     let d = new Date(cleaned.replace(" ", "T"));
     if (!isNaN(d.getTime())) return tryFormat(d);
