@@ -23,8 +23,8 @@ sudo systemctl restart testergpt
 sudo systemctl stop testergpt
 
 ls -la
-cp prisma/dev_backup9-1.db prisma/dev.db
-cp prisma/dev.db prisma/dev_backup9-1.db
+cp prisma/dev_bp1-1.db prisma/dev.db
+cp prisma/dev.db prisma/dev_bp1-1.db
 rm prisma/dev.db
 
 sudo systemctl status testergpt --no-pager -l
@@ -32,6 +32,9 @@ sudo journalctl -xeu testergpt.service --no-pager | tail -n 50
 sudo journalctl -u testergpt -n 100 --no-pager
 curl -I http://127.0.0.1:3000
 dig +short A testergpt.ru
+
+df -h; df -i
+sudo journalctl -u testergpt -n 50 --no-pager
 
 Выпуск сертификата Let's Encrypt:
 sudo certbot --nginx -d testergpt.ru -d www.testergpt.ru -m you@example.com --agree-tos --no-eff-email

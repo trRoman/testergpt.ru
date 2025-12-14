@@ -340,7 +340,8 @@ function evaluateAnswer(questionId: number, rawAnswer: string): boolean {
 			answer.includes("оба неверн") ||
 			answer.includes("оба неправиль") ||
 			answer.includes("оба не верн") ||
-			answer.includes("оба не правиль");
+			answer.includes("оба не правиль") ||
+			answer.includes("никакое");
 
 		// Принимаем краткий ответ "жёлтый/желтый" без обязательного слова "желток"
 		const saysYellowOnly =
