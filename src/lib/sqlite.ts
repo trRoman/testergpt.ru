@@ -13,7 +13,7 @@ const db = new Database(dbFilePath);
 
 // Pragmas to improve concurrency and reduce "database is locked" errors
 try {
-  db.pragma("journal_mode = WAL");
+  db.pragma("journal_mode = DELETE");
   db.pragma("synchronous = NORMAL");
   db.pragma("busy_timeout = 5000"); // ms
 } catch {
