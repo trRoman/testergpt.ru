@@ -11,6 +11,15 @@ if (!fs.existsSync(dbDirectoryPath)) {
 const dbFilePath = path.join(dbDirectoryPath, "dev.db");
 const db = new Database(dbFilePath);
 
+// Pragmas to improve concurrency and reduce "database is locked" errors
+try {
+  db.pragma("journal_mode = WAL");
+  db.pragma("synchronous = NORMAL");
+  db.pragma("busy_timeout = 5000"); // ms
+} catch {
+  // ignore pragma errors on some platforms
+}
+
 // Ensure table exists (compatible with Prisma schema)
 db.exec(`
 CREATE TABLE IF NOT EXISTS "Test1Result" (

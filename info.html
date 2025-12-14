@@ -82,6 +82,11 @@ sudo systemctl start testergpt
 journalctl -u testergpt -f
 tail -f /var/log/nginx/access.log /var/log/nginx/error.log
 
+
+sudo ufw deny out to 51.81.104.115
+sudo ufw deny out to 5.255.121.141
+sudo ufw status
+
 <!-- Перезагрузка сервиса testergpt: -->
 sudo systemctl daemon-reload
 <!-- Включение сервиса testergpt: -->
@@ -97,7 +102,7 @@ git checkout --ours dev.db
 Укажите Git использовать удалённую версию:
 git checkout --theirs dev.db
 ls -la
-cp prisma/dev_bp8.db prisma/dev.db
+cp prisma/dev_bp1-1.db prisma/dev.db
 cp prisma/dev.db prisma/dev_bp1-1.db
 rm prisma/dev.db
 
