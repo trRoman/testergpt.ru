@@ -1,3 +1,6 @@
+// src/app/api/survey/route.ts
+// Этот файл используется для записи данных опроса в базу данных.
+
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/sqlite";
 
@@ -42,7 +45,15 @@ export async function POST(req: NextRequest) {
 			stmt.run(participantId, age, gender, education, llmUsage);
 		}
 		return NextResponse.json({ ok: true });
-	} catch {
+	} catch (err: any) {
+		// Подробный лог для серверных журналов
+		// В проде возвращаем обезличенную ошибку, детали — только в логе
+		// eslint-disable-next-line no-console
+		console.error("[api/survey] insert failed", {
+			error: err?.message ?? String(err),
+			code: err?.code,
+			name: err?.name,
+		});
 		return NextResponse.json({ error: "Ошибка сохранения" }, { status: 500 });
 	}
 }

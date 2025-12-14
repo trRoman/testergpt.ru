@@ -22,8 +22,14 @@ sudo systemctl reload nginx
 sudo systemctl restart testergpt
 sudo systemctl stop testergpt
 
+ls -la
+cp prisma/dev_backup9-1.db prisma/dev.db
+cp prisma/dev.db prisma/dev_backup9-1.db
+rm prisma/dev.db
+
 sudo systemctl status testergpt --no-pager -l
 sudo journalctl -xeu testergpt.service --no-pager | tail -n 50
+sudo journalctl -u testergpt -n 100 --no-pager
 curl -I http://127.0.0.1:3000
 dig +short A testergpt.ru
 
