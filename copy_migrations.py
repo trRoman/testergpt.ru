@@ -1,3 +1,6 @@
+# copy_migrations.py
+# Этот скрипт копирует данные из одной базы данных в другую.
+
 import sqlite3
 import sys
 
